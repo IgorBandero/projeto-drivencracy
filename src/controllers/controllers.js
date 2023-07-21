@@ -169,45 +169,21 @@ export async function getResult(req, res){
 
     const {id} = req.params;
 
-    const poll = await db.collection("polls").findOne({_id: new ObjectId(id)});
+    const poll = await db.collection("polls").findOne({_id: new ObjectId(id)}).toArray();
 
     if(poll){
 
-        const winnerChoice = winnerCheck(id);
+        const choicesList = await db.collection("choices").findOne({pollId: new ObjectId(id)}).toArray();
 
-        const resultPoll = {
-            _id: id,
-            title: poll.title,
-            expireAt: poll.expireAt,
-            result: winnerChoice
-        }  
-        console.log(resultPoll);
-        res.status(201).send(resultPoll);
+        if (choicesList){
+
+            choicesList.forEach((choice) => {
+                const resultado = db.collection("votes").find({choiceId: new ObjectId(choice._id)}).toArray();
+                console.log(resultado);
+            })
+        }
     }
-
     else {
         return res.status(404).send("Enquete não localizada!");
     }    
-}
-
-async function winnerCheck(idPoll){
-
-    const query = { pollId: idPoll };
-
-    try {
-        const choicesList = await db.collection("choices").find({ pollId: new ObjectId(idPoll) }).toArray();
-        
-        const winner = { 
-            title: "title",
-            votes: "numVotes"
-        }    
-        return winner;
-
-    } catch (error) {
-        res.status(500).send(error.message);
-        return (null);
-    }
-
-    
-
 }
