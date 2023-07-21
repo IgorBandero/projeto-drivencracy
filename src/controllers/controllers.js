@@ -79,8 +79,7 @@ export async function createChoice(req, res){
         const todayDate = dayjs();
 
         if (date.isBefore(todayDate)){
-            return res.status(403).sen
-            d("Enquete já expirou!");
+            return res.status(403).send("Enquete já expirou!");
         }
 
         if(await db.collection("choices").findOne({title: newAlternative.title, pollId: newAlternative.pollId})){
@@ -117,8 +116,7 @@ export async function getChoices(req, res){
         try {
             const choicesList = await db.collection("choices").find({ pollId: new ObjectId(id) }).toArray();
             console.log(choicesList);
-            res.send(choicesList);
-        
+            res.send(choicesList);        
         } catch (error) {
             res.status(500).send(error.message);
         }
@@ -131,12 +129,41 @@ export async function getChoices(req, res){
 // #####################################################################################
 
 export async function newVote(req, res){
-    try {
-        
-    } catch (error) {
-        res.status(500).send(error.message);
+
+    const dateNow = dayjs().format('YYYY-MM-DD HH:mm');
+    const {id} = req.params;
+
+    const vote = {
+        _id: new ObjectId(),
+        createdAt: dateNow,
+        choiceId: new ObjectId(id) 
+    }
+
+    const choice = await db.collection("choices").findOne({_id: new ObjectId(id)});
+    
+    if(choice){        
+
+        const poll = await db.collection("polls").findOne({_id: new ObjectId(choice.pollId)});
+        const date = dayjs(poll.expireAt);
+
+        if (!date.isBefore(dateNow)){
+            try {
+                await db.collection("votes").insertOne(vote);
+                res.status(201).send("Voto computado com sucesso!");        
+            } catch (error) {
+                res.status(500).send(error.message);
+            } 
+        }
+        else {
+            return res.status(403).send("Enquete já expirou!");
+        }        
+    }
+    else {
+        return res.status(404).send("Alternativa não existe!");
     }
 }
+
+// #####################################################################################
 
 export async function getResult(req, res){
     try {
