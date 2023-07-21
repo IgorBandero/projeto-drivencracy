@@ -1,9 +1,8 @@
 import Joi from "joi";
 
-
 export const pollSchema = Joi.object({
     title: Joi.string().required(),
-    expireAt: Joi.date().format('YYYY-MM-DD HH:mm')
+    expireAt: Joi.string().optional().allow('')
 })
 
 export const choiceSchema = Joi.object({
@@ -11,8 +10,8 @@ export const choiceSchema = Joi.object({
     pollId: Joi.string().required()
 })
 
-
+/*
 export const voteSchema = Joi.object({
     createdAt: Joi.date().format('YYYY-MM-DD HH:mm').required(),
     choiceId: Joi.date().format('YYYY-MM-DD HH:mm').required()
-})
+})  */
